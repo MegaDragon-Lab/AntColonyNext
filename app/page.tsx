@@ -269,11 +269,11 @@ export default function AntColony() {
 
           {overlay === 'start' && <>
             <AntParade />
-            <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
-              {/* Título con fondo para que se vea sobre las hormigas */}
-              <div style={{ textAlign: 'center' }}>
-                <h1 style={{ fontSize: 52, margin: 0, textShadow: '0 0 30px #fbbf24, 0 2px 8px #000' }}>🐜 Ant Colony</h1>
-                <p style={{ color: '#fbbf24', fontSize: 17, margin: '6px 0 0', textShadow: '0 1px 4px #000' }}>Gestiona tu colonia, recolecta comida y sobrevive.</p>
+            <div style={{ position: 'relative', zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, width: '100%' }}>
+              {/* Título */}
+              <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.55)', borderRadius: 16, padding: '14px 32px' }}>
+                <h1 style={{ fontSize: 52, margin: 0, color: '#fbbf24' }}>🐜 Ant Colony</h1>
+                <p style={{ color: '#f5deb3', fontSize: 17, margin: '6px 0 0' }}>Gestiona tu colonia, recolecta comida y sobrevive.</p>
               </div>
 
               {/* Modos de juego */}
