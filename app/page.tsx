@@ -209,13 +209,6 @@ export default function AntColony() {
         </div>
       )}
 
-      {/* Leaderboard */}
-      {overlay === 'start' && (
-        <div style={{ position: 'absolute', top: 10, right: 14, zIndex: 20 }}>
-          <Leaderboard scores={scores} />
-        </div>
-      )}
-
       {/* Mode buttons */}
       {!overlay && (
         <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 20, display: 'flex', gap: 12 }}>
@@ -266,13 +259,12 @@ export default function AntColony() {
               <p style={{ fontSize: 14, color: '#aaa', textAlign: 'center', margin: 0 }}>
                 Modo Obrera: las hormigas recolectan solas.<br />Modo Reina: crea nuevas hormigas.
               </p>
-              <Leaderboard scores={scores} />
               <button onClick={startGame} style={{ padding: '14px 36px', borderRadius: 24, border: '2px solid #fbbf24', background: 'transparent', color: '#fbbf24', fontSize: 18, cursor: 'pointer' }}>
                 ▶ Iniciar
               </button>
               {/* Credits */}
               <div style={{
-                marginTop: 8, textAlign: 'center', fontSize: 12, color: '#a07840',
+                textAlign: 'center', fontSize: 12, color: '#a07840',
                 borderTop: '1px solid #3a2800', paddingTop: 12, lineHeight: 1.8,
               }}>
                 <div style={{ color: '#fbbf24', fontSize: 13, marginBottom: 2 }}>🎮 Director del Juego</div>
@@ -280,6 +272,8 @@ export default function AntColony() {
                 <div style={{ marginTop: 6, color: '#a07840' }}>con la colaboración de</div>
                 <div style={{ color: '#d4a85a' }}>Diegui DragoMonty &amp; Papi DragoTorni</div>
               </div>
+              {/* Top 10 al final */}
+              <Leaderboard scores={scores} />
             </div>
           </>}
 
