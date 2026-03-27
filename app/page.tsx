@@ -174,6 +174,7 @@ export default function AntColony() {
   const [mode,       setModeState]  = useState<'worker' | 'queen'>('worker');
   const [missions,   setMissions]   = useState<Mission[]>(makeMissions());
   const [isJubilee,  setIsJubilee]  = useState(false);
+  const isJubileeRef = useRef(false);
 
   useEffect(() => { fetch('/api/scores').then(r => r.json()).then(setScores).catch(() => {}); }, []);
 
@@ -184,6 +185,7 @@ export default function AntColony() {
     const freshMissions = makeMissions();
     setMissions(freshMissions);
     setIsJubilee(jubilee);
+    isJubileeRef.current = jubilee;
     const gs = initGameState(canvas, endGame, (h: HudData) => setHud(h), jubilee, (m) => setMissions(m));
     stateRef.current = gs;
     setOverlay(null);
@@ -197,7 +199,7 @@ export default function AntColony() {
   function endGame(win: boolean, score: number) {
     cancelAnimationFrame(rafRef.current);
     setFinalScore(score);
-    if (win && isJubilee) setOverlay('jubilee_win');
+    if (win && isJubileeRef.current) setOverlay('jubilee_win');
     else setOverlay(win ? 'win' : 'lose');
     setShowForm(true);
     refreshScores();
