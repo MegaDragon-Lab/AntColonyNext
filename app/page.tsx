@@ -46,7 +46,7 @@ function AntParade() {
     loop();
     return () => cancelAnimationFrame(raf);
   }, []);
-  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }} />;
+  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />;
 }
 
 /* ── types ── */
@@ -265,13 +265,15 @@ export default function AntColony() {
 
       {/* Overlay */}
       {overlay && (
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, overflowY: 'auto', padding: '20px 0' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.88)', zIndex: 50, overflowY: 'auto' }}>
+          {/* Hormigas animadas solo en start, detrás de todo */}
+          {overlay === 'start' && <AntParade />}
+
+          <div style={{ position: 'relative', zIndex: 2, minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, padding: '20px 0' }}>
 
           {overlay === 'start' && <>
-            <AntParade />
-            <div style={{ position: 'relative', zIndex: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, width: '100%' }}>
               {/* Título */}
-              <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.55)', borderRadius: 16, padding: '14px 32px' }}>
+              <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.7)', borderRadius: 16, padding: '14px 32px' }}>
                 <h1 style={{ fontSize: 52, margin: 0, color: '#fbbf24' }}>🐜 Ant Colony</h1>
                 <p style={{ color: '#f5deb3', fontSize: 17, margin: '6px 0 0' }}>Gestiona tu colonia, recolecta comida y sobrevive.</p>
               </div>
@@ -329,7 +331,6 @@ export default function AntColony() {
                 <div style={{ color: '#d4a85a' }}>Diegui DragoMonty &amp; Papi DragoTorni</div>
               </div>
               <Leaderboard scores={scores} />
-            </div>
           </>}
 
           {overlay === 'jubilee_win' && (
@@ -345,6 +346,7 @@ export default function AntColony() {
             </button>
           </>}
 
+          </div>{/* end zIndex wrapper */}
         </div>
       )}
     </div>
