@@ -270,24 +270,43 @@ export default function AntColony() {
           {overlay === 'start' && <>
             <AntParade />
             <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
-              <h1 style={{ fontSize: 48, margin: 0 }}>🐜 Ant Colony</h1>
-              <p style={{ color: '#fbbf24', fontSize: 18, margin: 0 }}>Gestiona tu colonia, recolecta comida y sobrevive.</p>
-              <p style={{ fontSize: 14, color: '#aaa', textAlign: 'center', margin: 0 }}>
-                Modo Obrera: las hormigas recolectan solas.<br />Modo Reina: crea nuevas hormigas.
-              </p>
-              {/* Botones de inicio */}
-              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
-                <button onClick={() => startGame(false)} style={{ padding: '14px 36px', borderRadius: 24, border: '2px solid #fbbf24', background: 'transparent', color: '#fbbf24', fontSize: 18, cursor: 'pointer' }}>
-                  ▶ Iniciar
-                </button>
-                <button onClick={() => startGame(true)} style={{ padding: '14px 28px', borderRadius: 24, border: '2px solid #f9a8d4', background: 'rgba(139,50,80,0.25)', color: '#f9a8d4', fontSize: 16, cursor: 'pointer' }}>
-                  👑 Gran Jubileo
-                </button>
+              {/* Título con fondo para que se vea sobre las hormigas */}
+              <div style={{ textAlign: 'center' }}>
+                <h1 style={{ fontSize: 52, margin: 0, textShadow: '0 0 30px #fbbf24, 0 2px 8px #000' }}>🐜 Ant Colony</h1>
+                <p style={{ color: '#fbbf24', fontSize: 17, margin: '6px 0 0', textShadow: '0 1px 4px #000' }}>Gestiona tu colonia, recolecta comida y sobrevive.</p>
               </div>
-              {/* Jubilee teaser + instrucciones */}
-              <div style={{ background: 'rgba(139,50,80,0.15)', border: '1px solid #9d4060', borderRadius: 12, padding: '14px 20px', maxWidth: 360, textAlign: 'center' }}>
-                <div style={{ color: '#f9a8d4', fontSize: 14, fontWeight: 'bold', marginBottom: 6 }}>🎉 El Gran Jubileo de la Reina 50</div>
-                <div style={{ fontSize: 12, color: '#d4a0b0', lineHeight: 1.8, textAlign: 'left' }}>
+
+              {/* Modos de juego */}
+              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
+                {/* Modo clásico */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.6)', border: '2px solid #fbbf24', borderRadius: 18, padding: '16px 24px', maxWidth: 200 }}>
+                  <div style={{ fontSize: 13, color: '#fbbf24', fontWeight: 'bold' }}>🐜 Modo Clásico</div>
+                  <div style={{ fontSize: 11, color: '#aaa', textAlign: 'center', lineHeight: 1.6 }}>
+                    Sobrevive 20 días y llega a 30 hormigas.<br />
+                    <span style={{ color: '#f5deb3' }}>Obrera</span>: recolectan solas.<br />
+                    <span style={{ color: '#f5deb3' }}>Reina</span>: crea nuevas hormigas.
+                  </div>
+                  <button onClick={() => startGame(false)} style={{ padding: '10px 28px', borderRadius: 20, border: '2px solid #fbbf24', background: 'transparent', color: '#fbbf24', fontSize: 15, cursor: 'pointer', marginTop: 4 }}>
+                    ▶ Jugar
+                  </button>
+                </div>
+                {/* Modo Jubileo */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, background: 'rgba(139,50,80,0.25)', border: '2px solid #f9a8d4', borderRadius: 18, padding: '16px 24px', maxWidth: 200 }}>
+                  <div style={{ fontSize: 13, color: '#f9a8d4', fontWeight: 'bold' }}>👑 Gran Jubileo</div>
+                  <div style={{ fontSize: 11, color: '#d4a0b0', textAlign: 'center', lineHeight: 1.6 }}>
+                    La Reina cumple 50 ciclos.<br />Completa <span style={{ color: '#fbbf24' }}>5 misiones</span> especiales y desbloquea el<br />
+                    <span style={{ color: '#fbbf24' }}>Tesoro de los 50</span>. 💛
+                  </div>
+                  <button onClick={() => startGame(true)} style={{ padding: '10px 28px', borderRadius: 20, border: '2px solid #f9a8d4', background: 'transparent', color: '#f9a8d4', fontSize: 15, cursor: 'pointer', marginTop: 4 }}>
+                    ▶ Jugar
+                  </button>
+                </div>
+              </div>
+
+              {/* Instrucciones Jubileo */}
+              <div style={{ background: 'rgba(139,50,80,0.15)', border: '1px solid #9d4060', borderRadius: 12, padding: '14px 20px', maxWidth: 360 }}>
+                <div style={{ color: '#f9a8d4', fontSize: 13, fontWeight: 'bold', marginBottom: 6, textAlign: 'center' }}>🎉 El Gran Jubileo de la Reina 50</div>
+                <div style={{ fontSize: 12, color: '#d4a0b0', lineHeight: 1.8 }}>
                   En el corazón del hormiguero, algo extraordinario está a punto de ocurrir…
                   La Reina cumple <span style={{ color: '#fbbf24' }}>50 ciclos</span>, una edad legendaria que solo las más sabias alcanzan.<br /><br />
                   Todas las hormigas deben unirse para preparar el mayor festín jamás visto:
@@ -301,6 +320,7 @@ export default function AntColony() {
                   <span style={{ color: '#fbbf24' }}> Tesoro de los 50</span> y su mensaje secreto. 💛
                 </div>
               </div>
+
               {/* Credits */}
               <div style={{ textAlign: 'center', fontSize: 12, color: '#a07840', borderTop: '1px solid #3a2800', paddingTop: 12, lineHeight: 1.8 }}>
                 <div style={{ color: '#fbbf24', fontSize: 13, marginBottom: 2 }}>🎮 Director del Juego</div>
