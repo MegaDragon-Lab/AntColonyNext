@@ -1,5 +1,15 @@
 /* ── Game engine (canvas-based, no React deps) ── */
 
+export interface Mission {
+  id: string;
+  label: string;
+  desc: string;
+  emoji: string;
+  goal: number;
+  current: number;
+  done: boolean;
+}
+
 export interface GameState {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
@@ -20,9 +30,25 @@ export interface GameState {
   ended: boolean;
   msgEl: HTMLDivElement | null;
   msgTimeout: ReturnType<typeof setTimeout> | null;
+  // jubilee
+  jubilee: boolean;
+  missions: Mission[];
+  totalFoodCollected: number;
+  totalEnemiesKilled: number;
+  onMission: (missions: Mission[]) => void;
 }
 
 export interface HudData { food: number; workers: number; soldiers: number; queenHp: number; day: number; score: number; }
+
+export function makeMissions(): Mission[] {
+  return [
+    { id: 'food',    emoji: '🍃', label: 'El Gran Banquete',      desc: 'Recolecta 500 unidades de comida para el festín',  goal: 500,  current: 0, done: false },
+    { id: 'survive', emoji: '🌅', label: 'Cincuenta Amaneceres',   desc: 'Sobrevive 10 días en honor a los 50 ciclos',       goal: 10,   current: 0, done: false },
+    { id: 'colony',  emoji: '🐜', label: 'La Gran Familia',        desc: 'Reúne una colonia de 20 hormigas',                 goal: 20,   current: 0, done: false },
+    { id: 'defend',  emoji: '⚔️', label: 'Guardianas de la Reina', desc: 'Derrota 30 invasores que amenazan el hormiguero',  goal: 30,   current: 0, done: false },
+    { id: 'queen',   emoji: '👑', label: 'La Reina Inmortal',      desc: 'Mantén a la Reina con más de 80 HP hasta el día 8',goal: 1,    current: 0, done: false },
+  ];
+}
 
 interface Ant {
   type: 'worker' | 'soldier';
@@ -42,6 +68,8 @@ export function initGameState(
   canvas: HTMLCanvasElement,
   onEnd: (win: boolean, score: number) => void,
   onHud: (h: HudData) => void,
+  jubilee = false,
+  onMission: (m: Mission[]) => void = () => {},
 ): GameState {
   const ctx = canvas.getContext('2d')!;
   canvas.width  = window.innerWidth;
@@ -57,6 +85,9 @@ export function initGameState(
     touchTarget: null,
     onEnd, onHud, ended: false,
     msgEl: null, msgTimeout: null,
+    jubilee, missions: makeMissions(),
+    totalFoodCollected: 0, totalEnemiesKilled: 0,
+    onMission,
   };
 
   for (let i = 0; i < 5; i++) gs.ants.push(makeAnt(gs, 'worker'));
@@ -139,6 +170,23 @@ export function spawnAnt(gs: GameState, type: 'worker' | 'soldier') {
   gs.ants.push(makeAnt(gs, type));
 }
 
+function updateMissions(gs: GameState) {
+  if (!gs.jubilee) return;
+  let changed = false;
+  for (const m of gs.missions) {
+    if (m.done) continue;
+    let prev = m.current;
+    if (m.id === 'food')    m.current = gs.totalFoodCollected;
+    if (m.id === 'survive') m.current = gs.day - 1;
+    if (m.id === 'colony')  m.current = gs.ants.length;
+    if (m.id === 'defend')  m.current = gs.totalEnemiesKilled;
+    if (m.id === 'queen')   m.current = (gs.day >= 8 && gs.queenHp > 80) ? 1 : 0;
+    if (m.current >= m.goal && !m.done) { m.done = true; changed = true; }
+    if (m.current !== prev) changed = true;
+  }
+  if (changed) gs.onMission([...gs.missions]);
+}
+
 export function tick(gs: GameState) {
   if (gs.ended) return;
 
@@ -176,8 +224,13 @@ export function tick(gs: GameState) {
   const score = gs.day * 100 + gs.ants.length * 10 + gs.food;
   gs.onHud({ food: gs.food, workers: gs.ants.filter(a => a.type === 'worker').length, soldiers: gs.ants.filter(a => a.type === 'soldier').length, queenHp: gs.queenHp, day: gs.day, score });
 
+  updateMissions(gs);
+
   if (gs.queenHp <= 0 || (gs.food <= 0 && gs.ants.length === 0)) { gs.ended = true; gs.onEnd(false, score); }
-  if (gs.day >= 20 && gs.ants.length >= 30) { gs.ended = true; gs.onEnd(true, score); }
+  // victoria normal
+  if (!gs.jubilee && gs.day >= 20 && gs.ants.length >= 30) { gs.ended = true; gs.onEnd(true, score); }
+  // victoria jubileo: todas las misiones completadas
+  if (gs.jubilee && gs.missions.every(m => m.done)) { gs.ended = true; gs.onEnd(true, score); }
 
   draw(gs);
 }
@@ -188,6 +241,7 @@ function updateWorker(gs: GameState, ant: Ant) {
     const dist = Math.hypot(dx, dy);
     if (dist < gs.nest.r) {
       gs.food += 5; ant.carrying = false;
+      gs.totalFoodCollected += 5;
       for (let i = 0; i < 4; i++) gs.particles.push(makeParticle(ant.x, ant.y, '#4ade80'));
     } else { ant.vx = (dx / dist) * ant.speed; ant.vy = (dy / dist) * ant.speed; }
   } else {
@@ -214,7 +268,7 @@ function updateSoldier(gs: GameState, ant: Ant) {
     const dx = target.x - ant.x, dy = target.y - ant.y, dist = Math.hypot(dx, dy);
     if (dist < 14) {
       ant.attackTimer++;
-      if (ant.attackTimer >= 20) { target.hp -= 12; ant.attackTimer = 0; for (let i = 0; i < 3; i++) gs.particles.push(makeParticle(target.x, target.y, '#f87171')); if (target.hp <= 0) target.alive = false; }
+      if (ant.attackTimer >= 20) { target.hp -= 12; ant.attackTimer = 0; for (let i = 0; i < 3; i++) gs.particles.push(makeParticle(target.x, target.y, '#f87171')); if (target.hp <= 0) { target.alive = false; gs.totalEnemiesKilled++; } }
     } else { ant.vx = (dx / dist) * ant.speed; ant.vy = (dy / dist) * ant.speed; }
   } else {
     const dx = gs.nest.x - ant.x, dy = gs.nest.y - ant.y, dist = Math.hypot(dx, dy);
