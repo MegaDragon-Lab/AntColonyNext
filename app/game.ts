@@ -30,6 +30,7 @@ export interface GameState {
   ended: boolean;
   msgEl: HTMLDivElement | null;
   msgTimeout: ReturnType<typeof setTimeout> | null;
+  lastTickTime: number;
   // jubilee
   jubilee: boolean;
   missions: Mission[];
@@ -72,19 +73,29 @@ export function initGameState(
   onMission: (m: Mission[]) => void = () => {},
 ): GameState {
   const ctx = canvas.getContext('2d')!;
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight;
+
+  // Use visualViewport when available (handles iPhone browser chrome correctly)
+  const vw = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
+  const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2); // cap at 2x for perf
+
+  canvas.width  = vw * dpr;
+  canvas.height = vh * dpr;
+  canvas.style.width  = vw + 'px';
+  canvas.style.height = vh + 'px';
+  ctx.scale(dpr, dpr);
 
   const gs: GameState = {
     canvas, ctx,
-    W: canvas.width, H: canvas.height,
+    W: vw, H: vh,
     food: 40, day: 1, dayTimer: 0,
     mode: 'worker', queenHp: 100,
     ants: [], foods: [], enemies: [], particles: [],
-    nest: { x: canvas.width / 2, y: canvas.height / 2, r: 36 },
+    nest: { x: vw / 2, y: vh / 2, r: 36 },
     touchTarget: null,
     onEnd, onHud, ended: false,
     msgEl: null, msgTimeout: null,
+    lastTickTime: performance.now(),
     jubilee, missions: makeMissions(),
     totalFoodCollected: 0, totalEnemiesKilled: 0,
     onMission,
@@ -93,6 +104,22 @@ export function initGameState(
   for (let i = 0; i < 5; i++) gs.ants.push(makeAnt(gs, 'worker'));
   gs.ants.push(makeAnt(gs, 'soldier'));
   for (let i = 0; i < 8; i++) gs.foods.push(makeFood(gs));
+
+  // Resize handler for iPhone viewport changes (address bar show/hide)
+  const onResize = () => {
+    const vw2 = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
+    const vh2 = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const dpr2 = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = vw2 * dpr2;
+    canvas.height = vh2 * dpr2;
+    canvas.style.width  = vw2 + 'px';
+    canvas.style.height = vh2 + 'px';
+    ctx.scale(dpr2, dpr2);
+    gs.W = vw2; gs.H = vh2;
+    gs.nest.x = vw2 / 2; gs.nest.y = vh2 / 2;
+  };
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
+  else window.addEventListener('resize', onResize);
 
   // touch
   canvas.addEventListener('touchstart', (e) => {
@@ -132,8 +159,12 @@ function makeAnt(gs: GameState, type: 'worker' | 'soldier'): Ant {
 
 function makeFood(gs: GameState): Food {
   const a = Math.random() * Math.PI * 2;
-  const d = 120 + Math.random() * (Math.min(gs.W, gs.H) * 0.35);
-  return { x: gs.nest.x + Math.cos(a) * d, y: gs.nest.y + Math.sin(a) * d, r: 5, alive: true };
+  // min distance from nest, max capped so food stays well within screen
+  const maxDist = Math.min(gs.W, gs.H) * 0.38;
+  const d = 100 + Math.random() * Math.max(40, maxDist - 100);
+  const x = Math.max(10, Math.min(gs.W - 10, gs.nest.x + Math.cos(a) * d));
+  const y = Math.max(10, Math.min(gs.H - 10, gs.nest.y + Math.sin(a) * d));
+  return { x, y, r: 5, alive: true };
 }
 
 function makeEnemy(gs: GameState): Enemy {
@@ -189,6 +220,12 @@ function updateMissions(gs: GameState) {
 
 export function tick(gs: GameState) {
   if (gs.ended) return;
+
+  // Skip tick if too much time passed (iOS backgrounding / tab switch)
+  const now = performance.now();
+  const elapsed = now - gs.lastTickTime;
+  gs.lastTickTime = now;
+  if (elapsed > 500) return; // more than 0.5s gap → skip to avoid jumps
 
   // day cycle
   gs.dayTimer++;
