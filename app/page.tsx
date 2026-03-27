@@ -71,19 +71,25 @@ type ScoreEntry = { name: string; score: number };
 function Leaderboard({ scores }: { scores: ScoreEntry[] }) {
   return (
     <div style={{
-      position: 'absolute', top: 10, right: 14, zIndex: 20,
-      background: 'rgba(0,0,0,0.7)', border: '1px solid #8b6914',
-      borderRadius: 10, padding: '10px 16px', minWidth: 180, color: '#f5deb3',
+      background: 'rgba(0,0,0,0.5)', border: '1px solid #8b6914',
+      borderRadius: 14, padding: '14px 24px', color: '#f5deb3',
+      width: 260, boxSizing: 'border-box',
     }}>
-      <div style={{ color: '#fbbf24', fontWeight: 'bold', marginBottom: 6, fontSize: 13 }}>
+      <div style={{ color: '#fbbf24', fontWeight: 'bold', marginBottom: 10, fontSize: 14, textAlign: 'center', letterSpacing: 1 }}>
         🏆 Top 10
       </div>
       {scores.length === 0
-        ? <div style={{ fontSize: 12, color: '#888' }}>Sin scores aún</div>
+        ? <div style={{ fontSize: 12, color: '#888', textAlign: 'center' }}>Sin scores aún</div>
         : scores.map((s, i) => (
-          <div key={i} style={{ fontSize: 12, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-            <span>{i + 1}. {s.name}</span>
-            <span style={{ color: '#fbbf24' }}>{s.score}</span>
+          <div key={i} style={{
+            fontSize: 13, display: 'flex', justifyContent: 'space-between',
+            alignItems: 'center', padding: '4px 0',
+            borderBottom: i < scores.length - 1 ? '1px solid #2a1800' : 'none',
+          }}>
+            <span style={{ color: i === 0 ? '#fbbf24' : i === 1 ? '#d1d5db' : i === 2 ? '#cd7c2f' : '#a07840' }}>
+              {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`} {s.name}
+            </span>
+            <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>{s.score}</span>
           </div>
         ))
       }
