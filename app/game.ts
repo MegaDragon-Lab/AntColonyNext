@@ -79,11 +79,11 @@ export function initGameState(
   const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   const dpr = Math.min(window.devicePixelRatio || 1, 2); // cap at 2x for perf
 
-  canvas.width  = vw * dpr;
-  canvas.height = vh * dpr;
+  canvas.width  = Math.round(vw * dpr);
+  canvas.height = Math.round(vh * dpr);
   canvas.style.width  = vw + 'px';
   canvas.style.height = vh + 'px';
-  ctx.scale(dpr, dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   const gs: GameState = {
     canvas, ctx,
@@ -105,16 +105,16 @@ export function initGameState(
   gs.ants.push(makeAnt(gs, 'soldier'));
   for (let i = 0; i < 8; i++) gs.foods.push(makeFood(gs));
 
-  // Resize handler for iPhone viewport changes (address bar show/hide)
+  // Resize handler for iPhone/Android viewport changes (address bar show/hide)
   const onResize = () => {
     const vw2 = window.visualViewport ? window.visualViewport.width  : window.innerWidth;
     const vh2 = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     const dpr2 = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width  = vw2 * dpr2;
-    canvas.height = vh2 * dpr2;
+    canvas.width  = Math.round(vw2 * dpr2);
+    canvas.height = Math.round(vh2 * dpr2);
     canvas.style.width  = vw2 + 'px';
     canvas.style.height = vh2 + 'px';
-    ctx.scale(dpr2, dpr2);
+    ctx.setTransform(dpr2, 0, 0, dpr2, 0, 0); // reset + scale, avoids stacking transforms
     gs.W = vw2; gs.H = vh2;
     gs.nest.x = vw2 / 2; gs.nest.y = vh2 / 2;
   };
