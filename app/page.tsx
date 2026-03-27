@@ -148,7 +148,7 @@ export default function AntColony() {
   const [overlay,   setOverlay]   = useState<'start' | 'win' | 'lose' | null>('start');
   const [finalScore, setFinalScore] = useState(0);
   const [showForm,  setShowForm]  = useState(false);
-  const [hud, setHud] = useState({ food: 0, workers: 0, soldiers: 0, queenHp: 100, day: 1 });
+  const [hud, setHud] = useState({ food: 0, workers: 0, soldiers: 0, queenHp: 100, day: 1, score: 0 });
   const [mode, setModeState] = useState<'worker' | 'queen'>('worker');
 
   useEffect(() => {
@@ -200,6 +200,7 @@ export default function AntColony() {
             `🐜 Obreras: ${hud.workers}`,
             `⚔️ Soldados: ${hud.soldiers}`,
             `👑 Reina: ${hud.queenHp} HP`,
+            `⭐ Score: ${hud.score}`,
           ].map(t => (
             <div key={t} style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid #8b6914', borderRadius: 8, padding: '6px 12px', fontSize: 13, minWidth: 160 }}>
               {t}

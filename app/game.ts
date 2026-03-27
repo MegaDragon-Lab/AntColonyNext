@@ -22,7 +22,7 @@ export interface GameState {
   msgTimeout: ReturnType<typeof setTimeout> | null;
 }
 
-export interface HudData { food: number; workers: number; soldiers: number; queenHp: number; day: number; }
+export interface HudData { food: number; workers: number; soldiers: number; queenHp: number; day: number; score: number; }
 
 interface Ant {
   type: 'worker' | 'soldier';
@@ -33,7 +33,7 @@ interface Ant {
 }
 
 interface Food { x: number; y: number; r: number; alive: boolean; }
-interface Enemy { x: number; y: number; hp: number; maxHp: number; speed: number; r: number; alive: boolean; attackTimer: number; }
+interface Enemy { x: number; y: number; hp: number; maxHp: number; speed: number; r: number; alive: boolean; attackTimer: number; kind: 'normal' | 'fast' | 'tank' | 'swarm'; }
 interface Particle { x: number; y: number; vx: number; vy: number; life: number; color: string; }
 
 const DAY_DURATION = 1800;
@@ -107,7 +107,20 @@ function makeEnemy(gs: GameState): Enemy {
   else if (side === 1) { x = gs.W + 20; y = Math.random() * gs.H; }
   else if (side === 2) { x = Math.random() * gs.W; y = gs.H + 20; }
   else { x = -20; y = Math.random() * gs.H; }
-  return { x, y, hp: 40 + gs.day * 5, maxHp: 40 + gs.day * 5, speed: 0.5 + gs.day * 0.05, r: 9, alive: true, attackTimer: 0 };
+
+  // tipos de enemigos a partir del día 5
+  let kind: Enemy['kind'] = 'normal';
+  if (gs.day >= 5) {
+    const roll = Math.random();
+    const extra = Math.min(gs.day - 5, 10) / 10; // 0..1 según avance
+    if (roll < 0.15 + extra * 0.1) kind = 'tank';
+    else if (roll < 0.35 + extra * 0.15) kind = 'fast';
+    else if (roll < 0.55 + extra * 0.2) kind = 'swarm';
+  }
+
+  const base = { normal: { hp: 40, speed: 0.55, r: 9 }, fast: { hp: 20, speed: 1.2, r: 6 }, tank: { hp: 120, speed: 0.3, r: 14 }, swarm: { hp: 12, speed: 0.9, r: 5 } }[kind];
+  const hp = Math.round(base.hp + gs.day * 4);
+  return { x, y, hp, maxHp: hp, speed: base.speed + gs.day * 0.03, r: base.r, alive: true, attackTimer: 0, kind };
 }
 
 function makeParticle(x: number, y: number, color: string): Particle {
@@ -130,12 +143,21 @@ export function tick(gs: GameState) {
     gs.dayTimer = 0;
     gs.day++;
     gs.food = Math.max(0, gs.food - Math.floor(gs.ants.length * 0.5));
-    for (let i = 0; i < 1 + Math.floor(gs.day / 2); i++) gs.enemies.push(makeEnemy(gs));
-    for (let i = 0; i < 4 + gs.day; i++) gs.foods.push(makeFood(gs));
+    // más enemigos cada día, y más tipos a partir del día 5
+    const enemyCount = 1 + Math.floor(gs.day / 2) + (gs.day >= 5 ? Math.floor((gs.day - 5) / 3) : 0);
+    for (let i = 0; i < enemyCount; i++) gs.enemies.push(makeEnemy(gs));
+    // más comida escalando con el día
+    const foodCount = 6 + gs.day * 2;
+    for (let i = 0; i < foodCount; i++) gs.foods.push(makeFood(gs));
+    // spawn automático de obreras cada 2 días si hay comida suficiente
+    if (gs.day % 2 === 0 && gs.food >= 15) {
+      gs.food -= 15;
+      gs.ants.push(makeAnt(gs, 'worker'));
+    }
   }
 
-  if (gs.foods.filter(f => f.alive).length < 5)
-    for (let i = 0; i < 3; i++) gs.foods.push(makeFood(gs));
+  if (gs.foods.filter(f => f.alive).length < 8)
+    for (let i = 0; i < 4; i++) gs.foods.push(makeFood(gs));
 
   gs.ants.forEach(a => a.type === 'worker' ? updateWorker(gs, a) : updateSoldier(gs, a));
   gs.enemies.forEach(e => { if (e.alive) updateEnemy(gs, e); });
@@ -146,9 +168,9 @@ export function tick(gs: GameState) {
   gs.enemies = gs.enemies.filter(e => e.alive);
   gs.particles = gs.particles.filter(p => p.life > 0);
 
-  gs.onHud({ food: gs.food, workers: gs.ants.filter(a => a.type === 'worker').length, soldiers: gs.ants.filter(a => a.type === 'soldier').length, queenHp: gs.queenHp, day: gs.day });
-
   const score = gs.day * 100 + gs.ants.length * 10 + gs.food;
+  gs.onHud({ food: gs.food, workers: gs.ants.filter(a => a.type === 'worker').length, soldiers: gs.ants.filter(a => a.type === 'soldier').length, queenHp: gs.queenHp, day: gs.day, score });
+
   if (gs.queenHp <= 0 || (gs.food <= 0 && gs.ants.length === 0)) { gs.ended = true; gs.onEnd(false, score); }
   if (gs.day >= 20 && gs.ants.length >= 30) { gs.ended = true; gs.onEnd(true, score); }
 
@@ -243,18 +265,22 @@ function draw(gs: GameState) {
   // enemies
   for (const e of gs.enemies) {
     if (!e.alive) continue;
+    const eColor = e.kind === 'fast' ? '#a855f7' : e.kind === 'tank' ? '#1d4ed8' : e.kind === 'swarm' ? '#f59e0b' : '#7c2d12';
+    const eBorder = e.kind === 'fast' ? '#d946ef' : e.kind === 'tank' ? '#3b82f6' : e.kind === 'swarm' ? '#fbbf24' : '#dc2626';
     ctx.save(); ctx.translate(e.x, e.y);
-    ctx.beginPath(); ctx.arc(0, 0, e.r, 0, Math.PI * 2); ctx.fillStyle = '#7c2d12'; ctx.fill();
-    ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.strokeStyle = '#7c2d12'; ctx.lineWidth = 1;
-    for (let i = 0; i < 4; i++) {
-      const a1 = (i / 4) * Math.PI - Math.PI / 2, a2 = a1 + 0.4;
-      ctx.beginPath(); ctx.moveTo(Math.cos(a1) * e.r, Math.sin(a1) * e.r); ctx.lineTo(Math.cos(a2) * (e.r + 10), Math.sin(a2) * (e.r + 10)); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-Math.cos(a1) * e.r, Math.sin(a1) * e.r); ctx.lineTo(-Math.cos(a2) * (e.r + 10), Math.sin(a2) * (e.r + 10)); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, e.r, 0, Math.PI * 2); ctx.fillStyle = eColor; ctx.fill();
+    ctx.strokeStyle = eBorder; ctx.lineWidth = 1.5; ctx.stroke();
+    // legs
+    ctx.strokeStyle = eColor; ctx.lineWidth = 1;
+    const legCount = e.kind === 'swarm' ? 3 : 4;
+    for (let i = 0; i < legCount; i++) {
+      const a1 = (i / legCount) * Math.PI - Math.PI / 2, a2 = a1 + 0.4;
+      ctx.beginPath(); ctx.moveTo(Math.cos(a1) * e.r, Math.sin(a1) * e.r); ctx.lineTo(Math.cos(a2) * (e.r + 8), Math.sin(a2) * (e.r + 8)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-Math.cos(a1) * e.r, Math.sin(a1) * e.r); ctx.lineTo(-Math.cos(a2) * (e.r + 8), Math.sin(a2) * (e.r + 8)); ctx.stroke();
     }
     ctx.restore();
     ctx.fillStyle = '#333'; ctx.fillRect(e.x - 12, e.y - e.r - 8, 24, 4);
-    ctx.fillStyle = '#dc2626'; ctx.fillRect(e.x - 12, e.y - e.r - 8, 24 * (e.hp / e.maxHp), 4);
+    ctx.fillStyle = eBorder; ctx.fillRect(e.x - 12, e.y - e.r - 8, 24 * (e.hp / e.maxHp), 4);
   }
 
   // ants
