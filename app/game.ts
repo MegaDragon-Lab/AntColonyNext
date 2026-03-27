@@ -86,11 +86,16 @@ export function initGameState(
 }
 
 function makeAnt(gs: GameState, type: 'worker' | 'soldier'): Ant {
+  const angle = Math.random() * Math.PI * 2;
+  const dist = gs.nest.r + 10 + Math.random() * 40;
   return {
-    type, x: gs.nest.x + (Math.random() - 0.5) * 20, y: gs.nest.y + (Math.random() - 0.5) * 20,
+    type,
+    x: gs.nest.x + Math.cos(angle) * dist,
+    y: gs.nest.y + Math.sin(angle) * dist,
     vx: 0, vy: 0, speed: type === 'soldier' ? 1.4 : 1.1,
     hp: type === 'soldier' ? 60 : 30, maxHp: type === 'soldier' ? 60 : 30,
-    carrying: false, angle: Math.random() * Math.PI * 2, wanderTimer: 0, attackTimer: 0,
+    carrying: false, angle: Math.random() * Math.PI * 2,
+    wanderTimer: Math.floor(Math.random() * 40), attackTimer: 0,
   };
 }
 
