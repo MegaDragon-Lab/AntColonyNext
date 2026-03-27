@@ -2,6 +2,68 @@
 import { useEffect, useRef, useState } from 'react';
 import { initGameState, tick, spawnAnt, type GameState, type HudData } from './game';
 
+/* ── Animated ants for start screen ── */
+function AntParade() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    const W = canvas.width = canvas.offsetWidth;
+    const H = canvas.height = canvas.offsetHeight;
+
+    type MiniAnt = { x: number; y: number; angle: number; speed: number; wander: number; color: string };
+    const ants: MiniAnt[] = Array.from({ length: 18 }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      angle: Math.random() * Math.PI * 2,
+      speed: 0.6 + Math.random() * 0.8,
+      wander: 0,
+      color: Math.random() > 0.4 ? '#f97316' : '#ef4444',
+    }));
+
+    let raf: number;
+    function loop() {
+      ctx.clearRect(0, 0, W, H);
+      for (const a of ants) {
+        a.wander--;
+        if (a.wander <= 0) { a.angle += (Math.random() - 0.5) * 1.4; a.wander = 20 + Math.random() * 40; }
+        a.x += Math.cos(a.angle) * a.speed;
+        a.y += Math.sin(a.angle) * a.speed;
+        if (a.x < 0) a.x = W; if (a.x > W) a.x = 0;
+        if (a.y < 0) a.y = H; if (a.y > H) a.y = 0;
+
+        ctx.save();
+        ctx.translate(a.x, a.y);
+        ctx.rotate(a.angle);
+        ctx.fillStyle = a.color;
+        // body
+        ctx.beginPath(); ctx.ellipse(0, 0, 7, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+        // head
+        ctx.beginPath(); ctx.arc(8, 0, 3, 0, Math.PI * 2); ctx.fill();
+        // legs
+        ctx.strokeStyle = a.color; ctx.lineWidth = 1;
+        for (let i = -1; i <= 1; i++) {
+          ctx.beginPath(); ctx.moveTo(i * 3, 0); ctx.lineTo(i * 3 - 4, 5); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(i * 3, 0); ctx.lineTo(i * 3 + 4, -5); ctx.stroke();
+        }
+        // antennae
+        ctx.beginPath(); ctx.moveTo(9, -1); ctx.lineTo(14, -5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(9, 1); ctx.lineTo(14, 5); ctx.stroke();
+        ctx.restore();
+      }
+      raf = requestAnimationFrame(loop);
+    }
+    loop();
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <canvas ref={canvasRef} style={{
+      position: 'absolute', inset: 0, width: '100%', height: '100%',
+      pointerEvents: 'none', zIndex: 1,
+    }} />
+  );
+}
+
 /* ── types ── */
 type ScoreEntry = { name: string; score: number };
 
@@ -197,15 +259,28 @@ export default function AntColony() {
           alignItems: 'center', justifyContent: 'center', gap: 18,
         }}>
           {overlay === 'start' && <>
-            <h1 style={{ fontSize: 48 }}>🐜 Ant Colony</h1>
-            <p style={{ color: '#fbbf24', fontSize: 18 }}>Gestiona tu colonia, recolecta comida y sobrevive.</p>
-            <p style={{ fontSize: 14, color: '#aaa', textAlign: 'center' }}>
-              Modo Obrera: las hormigas recolectan solas.<br />Modo Reina: crea nuevas hormigas.
-            </p>
-            <Leaderboard scores={scores} />
-            <button onClick={startGame} style={{ padding: '14px 36px', borderRadius: 24, border: '2px solid #fbbf24', background: 'transparent', color: '#fbbf24', fontSize: 18, cursor: 'pointer' }}>
-              ▶ Iniciar
-            </button>
+            <AntParade />
+            <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+              <h1 style={{ fontSize: 48, margin: 0 }}>🐜 Ant Colony</h1>
+              <p style={{ color: '#fbbf24', fontSize: 18, margin: 0 }}>Gestiona tu colonia, recolecta comida y sobrevive.</p>
+              <p style={{ fontSize: 14, color: '#aaa', textAlign: 'center', margin: 0 }}>
+                Modo Obrera: las hormigas recolectan solas.<br />Modo Reina: crea nuevas hormigas.
+              </p>
+              <Leaderboard scores={scores} />
+              <button onClick={startGame} style={{ padding: '14px 36px', borderRadius: 24, border: '2px solid #fbbf24', background: 'transparent', color: '#fbbf24', fontSize: 18, cursor: 'pointer' }}>
+                ▶ Iniciar
+              </button>
+              {/* Credits */}
+              <div style={{
+                marginTop: 8, textAlign: 'center', fontSize: 12, color: '#a07840',
+                borderTop: '1px solid #3a2800', paddingTop: 12, lineHeight: 1.8,
+              }}>
+                <div style={{ color: '#fbbf24', fontSize: 13, marginBottom: 2 }}>🎮 Director del Juego</div>
+                <div style={{ color: '#f5deb3', fontSize: 14, fontWeight: 'bold' }}>Achi DragoMonty</div>
+                <div style={{ marginTop: 6, color: '#a07840' }}>con la colaboración de</div>
+                <div style={{ color: '#d4a85a' }}>Diegui DragoMonty &amp; Papi DragoTorni</div>
+              </div>
+            </div>
           </>}
 
           {(overlay === 'win' || overlay === 'lose') && <>
