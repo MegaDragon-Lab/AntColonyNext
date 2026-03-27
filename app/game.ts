@@ -235,8 +235,10 @@ export function tick(gs: GameState) {
     gs.dayTimer = 0;
     gs.day++;
     gs.food = Math.max(0, gs.food - Math.floor(gs.ants.length * 0.5));
-    // enemigos al cambiar de día — más agresivo
-    const enemyCount = 2 + gs.day + (gs.day >= 5 ? Math.floor((gs.day - 5) / 2) : 0);
+    // enemigos al cambiar de día — se dispara a partir del día 5
+    const base = 2 + gs.day;
+    const bonus = gs.day >= 5 ? Math.floor((gs.day - 4) * 1.5) : 0;
+    const enemyCount = base + bonus;
     for (let i = 0; i < enemyCount; i++) gs.enemies.push(makeEnemy(gs));
     // más comida escalando con el día
     const foodCount = 6 + gs.day * 2;
@@ -248,10 +250,11 @@ export function tick(gs: GameState) {
     }
   }
 
-  // spawn continuo de enemigos durante el día (cada ~500 ticks)
-  if (gs.dayTimer > 0 && gs.dayTimer % 500 === 0) {
-    const midCount = 1 + Math.floor(gs.day / 3);
-    for (let i = 0; i < midCount; i++) gs.enemies.push(makeEnemy(gs));
+  // spawn continuo durante el día — más frecuente y numeroso a partir del día 5
+  const waveInterval = gs.day >= 5 ? 300 : 500;
+  const waveSize = gs.day >= 5 ? 1 + Math.floor((gs.day - 4) / 2) : 1 + Math.floor(gs.day / 3);
+  if (gs.dayTimer > 0 && gs.dayTimer % waveInterval === 0) {
+    for (let i = 0; i < waveSize; i++) gs.enemies.push(makeEnemy(gs));
   }
 
   if (gs.foods.filter(f => f.alive).length < 8)
