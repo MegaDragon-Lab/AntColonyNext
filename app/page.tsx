@@ -282,12 +282,21 @@ export default function AntColony() {
                   👑 Gran Jubileo
                 </button>
               </div>
-              {/* Jubilee teaser */}
-              <div style={{ background: 'rgba(139,50,80,0.15)', border: '1px solid #9d4060', borderRadius: 12, padding: '12px 20px', maxWidth: 340, textAlign: 'center' }}>
-                <div style={{ color: '#f9a8d4', fontSize: 13, fontWeight: 'bold', marginBottom: 4 }}>🎉 El Gran Jubileo de la Reina 50</div>
-                <div style={{ fontSize: 12, color: '#d4a0b0', lineHeight: 1.7 }}>
-                  La Reina cumple 50 ciclos. Completa 5 misiones especiales<br />
-                  para desbloquear el <span style={{ color: '#fbbf24' }}>Tesoro de los 50</span> y su mensaje secreto.
+              {/* Jubilee teaser + instrucciones */}
+              <div style={{ background: 'rgba(139,50,80,0.15)', border: '1px solid #9d4060', borderRadius: 12, padding: '14px 20px', maxWidth: 360, textAlign: 'center' }}>
+                <div style={{ color: '#f9a8d4', fontSize: 14, fontWeight: 'bold', marginBottom: 6 }}>🎉 El Gran Jubileo de la Reina 50</div>
+                <div style={{ fontSize: 12, color: '#d4a0b0', lineHeight: 1.8, textAlign: 'left' }}>
+                  En el corazón del hormiguero, algo extraordinario está a punto de ocurrir…
+                  La Reina cumple <span style={{ color: '#fbbf24' }}>50 ciclos</span>, una edad legendaria que solo las más sabias alcanzan.<br /><br />
+                  Todas las hormigas deben unirse para preparar el mayor festín jamás visto:
+                  <ul style={{ margin: '6px 0 6px 16px', padding: 0, lineHeight: 2 }}>
+                    <li>🍃 Los recursos escasean — recolecta comida para el banquete</li>
+                    <li>🗺️ Explora nuevos territorios con tus obreras</li>
+                    <li>⚔️ Las guardianas deben proteger el hormiguero</li>
+                    <li>👑 Mantén a la Reina con vida y fuerte</li>
+                  </ul>
+                  Completa las <span style={{ color: '#fbbf24' }}>5 misiones especiales</span> para desbloquear el
+                  <span style={{ color: '#fbbf24' }}> Tesoro de los 50</span> y su mensaje secreto. 💛
                 </div>
               </div>
               {/* Credits */}
