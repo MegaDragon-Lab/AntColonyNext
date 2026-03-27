@@ -104,6 +104,8 @@ export function initGameState(
   for (let i = 0; i < 5; i++) gs.ants.push(makeAnt(gs, 'worker'));
   gs.ants.push(makeAnt(gs, 'soldier'));
   for (let i = 0; i < 8; i++) gs.foods.push(makeFood(gs));
+  // enemigos iniciales desde el primer momento
+  for (let i = 0; i < 2; i++) gs.enemies.push(makeEnemy(gs));
 
   // Resize handler for iPhone/Android viewport changes (address bar show/hide)
   const onResize = () => {
@@ -233,8 +235,8 @@ export function tick(gs: GameState) {
     gs.dayTimer = 0;
     gs.day++;
     gs.food = Math.max(0, gs.food - Math.floor(gs.ants.length * 0.5));
-    // más enemigos cada día, y más tipos a partir del día 5
-    const enemyCount = 1 + Math.floor(gs.day / 2) + (gs.day >= 5 ? Math.floor((gs.day - 5) / 3) : 0);
+    // enemigos al cambiar de día — más agresivo
+    const enemyCount = 2 + gs.day + (gs.day >= 5 ? Math.floor((gs.day - 5) / 2) : 0);
     for (let i = 0; i < enemyCount; i++) gs.enemies.push(makeEnemy(gs));
     // más comida escalando con el día
     const foodCount = 6 + gs.day * 2;
@@ -244,6 +246,12 @@ export function tick(gs: GameState) {
       gs.food -= 15;
       gs.ants.push(makeAnt(gs, 'worker'));
     }
+  }
+
+  // spawn continuo de enemigos durante el día (cada ~500 ticks)
+  if (gs.dayTimer > 0 && gs.dayTimer % 500 === 0) {
+    const midCount = 1 + Math.floor(gs.day / 3);
+    for (let i = 0; i < midCount; i++) gs.enemies.push(makeEnemy(gs));
   }
 
   if (gs.foods.filter(f => f.alive).length < 8)
